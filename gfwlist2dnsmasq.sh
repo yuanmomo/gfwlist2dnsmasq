@@ -90,13 +90,15 @@ check_depends(){
     fi
 
     SYS_KERNEL=`uname -s`
-    if [ $SYS_KERNEL = "Darwin"  -o $SYS_KERNEL = "FreeBSD" ]; then
-        BASE64_DECODE='base64 -D'
-        SED_ERES='sed -E'
-    else
-        BASE64_DECODE='base64 -d'
-        SED_ERES='sed -r'
-    fi
+    #if [ $SYS_KERNEL = "Darwin"  -o $SYS_KERNEL = "FreeBSD" ]; then
+    #    BASE64_DECODE='base64 -D'
+    #    SED_ERES='sed -E'
+    #else
+    #    BASE64_DECODE='base64 -d'
+    #    SED_ERES='sed -r'
+    #fi
+    BASE64_DECODE='base64 -d'
+    SED_ERES='gsed -r'
 }
 
 get_args(){
@@ -227,7 +229,7 @@ process(){
     # Fetch GfwList and decode it into plain text
     printf 'Fetching GfwList... '
     if [ $USE_WGET = 0 ]; then
-        curl -s -L $CURL_EXTARG -o$BASE64_FILE $BASE_URL
+        curl -L $CURL_EXTARG -o$BASE64_FILE $BASE_URL
     else
         wget -q $WGET_EXTARG -O$BASE64_FILE $BASE_URL
     fi
@@ -276,6 +278,7 @@ process(){
     # Add extra domains
     if [ ! -z $EXTRA_DOMAIN_FILE ]; then
         cat $EXTRA_DOMAIN_FILE >> $DOMAIN_FILE
+        cat $DOMAIN_FILE
         printf 'Extra domain file '$EXTRA_DOMAIN_FILE'... ' && _green 'Added\n'
     fi
 
