@@ -26,3 +26,4 @@ atlassian.com
 openwrt.org
 gcr.io
 googleapis.com
+index.docker.io

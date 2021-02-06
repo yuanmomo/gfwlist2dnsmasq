@@ -1,0 +1,67 @@
+# This file is interpreted as shell script.
+# Put your custom iptables rules here, they will
+# be executed with each firewall (re-)start.
+
+# Internal uci firewall chains are flushed and recreated on reload, so
+# put custom rules into the root chains e.g. INPUT or FORWARD or into the
+# special user chains, e.g. input_wan_rule or postrouting_lan_rule.
+
+
+MODEMIP=192.168.1.1
+MODEM_NET=`echo $MODEMIP | cut -d "." -f 1-3`
+ROUTER_WAN_PORT_IP=192.168.1.2
+WAN_PORT=eth0.2
+
+ifconfig $WAN_PORT $ROUTER_WAN_PORT_IP netmask 255.255.255.0 broadcast $MODEM_NET.255
+iptables -A forwarding_rule -d $MODEMIP -j ACCEPT
+iptables -t nat -A postrouting_rule -d $MODEMIP -o $WAN_PORT -j MASQUERADE
+
+
+
+iptables -t nat -N XRAY
+
+
+# 直连服务器 IP
+iptables -t nat -A XRAY -d 10.10.1.0/24 -j RETURN
+####iptables -t nat -A XRAY -p tcp -j RETURN -m mark --mark 0xff
+
+
+# 本地白名单部分
+iptables -t nat -A XRAY -d 0.0.0.0/8 -j RETURN
+iptables -t nat -A XRAY -d 10.0.0.0/8 -j RETURN
+iptables -t nat -A XRAY -d 127.0.0.0/8 -j RETURN
+iptables -t nat -A XRAY -d 169.254.0.0/16 -j RETURN
+iptables -t nat -A XRAY -d 172.16.0.0/12 -j RETURN
+iptables -t nat -A XRAY -d 192.168.0.0/16 -j RETURN
+iptables -t nat -A XRAY -d 224.0.0.0/4 -j RETURN
+iptables -t nat -A XRAY -d 240.0.0.0/4 -j RETURN
+iptables -t nat -A XRAY -d 10.10.1.4/32 -j RETURN
+iptables -t nat -A XRAY -d 10.10.1.23/32 -j RETURN
+
+# 删除 ipset 集合 gfwlist 的引用，即 gfwlist 规则列表
+#透明代理端口
+iptables -t nat -D XRAY -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-ports 1080
+
+# 清空 ipset 集合
+ipset destroy
+ipset create gfwlist hash:net
+ipset create ip_ext hash:net
+
+
+# 将中国大陆 IP 列表导入集合 chnroute
+for i in `cat /root/ip_ext.txt`;
+do
+    ipset add ip_ext $i
+done
+
+# 增加 ipset 集合 chinalist 的引用，即 dnsmasq_chinalist
+#iptables -t nat -A XRAY -m set --match-set chinalist dst -j RETURN
+
+
+iptables -t nat -A XRAY -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-ports 1080 #透明代理端口
+iptables -t nat -A XRAY -p tcp -m set --match-set ip_ext dst -j REDIRECT --to-ports 1080 #透明代理端口
+
+iptables -t nat -A XRAY -p tcp -j RETURN
+
+iptables -t nat -A PREROUTING -p tcp -j XRAY
+
