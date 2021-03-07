@@ -1,0 +1,38 @@
+# This file is interpreted as shell script.
+# Put your custom iptables rules here, they will
+# be executed with each firewall (re-)start.
+
+# Internal uci firewall chains are flushed and recreated on reload, so
+# put custom rules into the root chains e.g. INPUT or FORWARD or into the
+# special user chains, e.g. input_wan_rule or postrouting_lan_rule.
+
+
+iptables-save -c | grep -v "gfwlist"| iptables-restore -c
+
+
+# 允许连接保留地址
+iptables -t nat -A PREROUTING -d 0.0.0.0/32 -j RETURN
+iptables -t nat -A PREROUTING -d 10.0.0.0/8 -j RETURN
+iptables -t nat -A PREROUTING -d 127.0.0.0/8 -j RETURN
+iptables -t nat -A PREROUTING -d 169.254.0.0/16 -j RETURN
+iptables -t nat -A PREROUTING -d 172.16.0.0/12 -j RETURN
+iptables -t nat -A PREROUTING -d 192.168.0.0/16 -j RETURN
+iptables -t nat -A PREROUTING -d 224.0.0.0/4 -j RETURN
+iptables -t nat -A PREROUTING -d 240.0.0.0/4 -j RETURN
+iptables -t nat -A PREROUTING -s 10.10.1.3/32 -j RETURN
+iptables -t nat -A PREROUTING -s 10.10.1.4/32 -j RETURN
+iptables -t nat -A PREROUTING -s 10.10.1.23/32 -j RETURN
+
+
+ipset -X gfwlist
+ipset create gfwlist hash:ip
+iptables -t nat -A PREROUTING -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-port 1080
+#iptables -t nat -A OUTPUT -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-port 1080
+
+ipset -X gfwlist_ext
+ipset create gfwlist_ext hash:net
+for ip in $(cat /root/ip_ext.txt);
+    do ipset add gfwlist_ext $ip;
+done
+iptables -t nat -A PREROUTING -p tcp -m set --match-set gfwlist_ext dst -j REDIRECT --to-port 1080
+#iptables -t nat -A OUTPUT -p tcp -m set --match-set gfwlist_ext dst -j REDIRECT --to-port 1080

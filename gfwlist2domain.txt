@@ -27,3 +27,10 @@ openwrt.org
 gcr.io
 googleapis.com
 index.docker.io
+zoom.us
+zopim.com
+ada.support
+google-analytics.com
+hotjar.com
+demandbase.com
+statuspage.io
