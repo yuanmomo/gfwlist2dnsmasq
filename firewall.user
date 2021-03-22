@@ -46,8 +46,8 @@ iptables -t nat -A XRAY -d 172.16.0.0/12 -j RETURN
 iptables -t nat -A XRAY -d 192.168.0.0/16 -j RETURN
 iptables -t nat -A XRAY -d 224.0.0.0/4 -j RETURN
 iptables -t nat -A XRAY -d 240.0.0.0/4 -j RETURN
-iptables -t nat -A XRAY -d 10.10.1.4/32 -j RETURN
-#iptables -t nat -A XRAY -d 10.10.1.23/32 -j RETURN
+iptables -t nat -A XRAY -s 10.10.1.4/32 -j RETURN
+#iptables -t nat -A XRAY -s 10.10.1.23/32 -j RETURN
 
 # 删除 ipset 集合 gfwlist 的引用，即 gfwlist 规则列表
 #透明代理端口
