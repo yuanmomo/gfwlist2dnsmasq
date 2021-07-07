@@ -19,7 +19,6 @@ apache.org
 sonatype.org
 maven.org
 proxmox.com
-d13j197kn07r5y.cloudfront.net
 zerotier.com
 trello.com
 atlassian.com
